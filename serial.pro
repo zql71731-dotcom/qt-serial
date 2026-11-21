@@ -1,2 +1,2 @@
-QT += widgets serialport
+QT += widgets serialport charts
 SOURCES += main.cpp

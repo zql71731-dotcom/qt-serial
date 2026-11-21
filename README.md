@@ -8,6 +8,9 @@
 - 打开 / 关闭串口，按钮文字随状态切换
 - 发送数据（以 UTF-8 编码写入串口）
 - 实时显示接收到的数据（`readyRead` 信号驱动）
+- **实时曲线：接收到的数字自动绘制成滚动折线图**
+  - 接收与显示解耦：`readyRead` 只负责解析入队，`QTimer` 每 100ms 刷新一次曲线
+  - 保留最近 50 个数据点，X 轴窗口随数据滚动
 
 ## 编译
 
@@ -61,11 +64,16 @@ echo "hello" > /tmp/vserial2
 |---|---|
 | `QSerialPort` | 串口读写，继承自 `QIODevice` |
 | `readyRead` 信号 | 串口收到数据时由 Qt 发出，驱动界面更新 |
-| 信号槽 + lambda | 三个 `connect` 覆盖全部交互逻辑 |
-| 布局嵌套 | `QVBoxLayout` 内嵌两个 `QHBoxLayout` |
+| 信号槽 + lambda | 四个 `connect` 覆盖全部交互逻辑 |
+| 布局嵌套 | `QVBoxLayout` 内嵌两个 `QHBoxLayout` + `QChartView` |
+| `QTimer` | 每 100ms 刷新曲线，与数据接收解耦，避免高频重绘 |
+| `QChart` / `QLineSeries` / `QChartView` | 数据、图表、控件的三层分离 |
+| 滚动窗口 | 固定长度队列 + 单调递增的 X 计数器 + 轴范围随动 |
 
 ## 已知不足
 
 - 串口列表为硬编码（`/tmp/vserial1`），未使用 `QSerialPortInfo` 自动枚举
 - 仅支持 UTF-8 文本，未提供 Hex 收发模式
+- Y 轴范围固定 0～100，超出范围的数据会画到屏幕外
 - 未显示收发字节计数
+- 未做 QThread：串口读写在主线程，极端高频下有阻塞界面的风险
