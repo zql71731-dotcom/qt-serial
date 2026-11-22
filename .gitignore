@@ -3,3 +3,4 @@
 serial
 Makefile
 .qmake.stash
+build/
